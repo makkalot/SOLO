@@ -80,9 +80,19 @@ def inference_detector(model, img):
     test_pipeline = [LoadImage()] + cfg.data.test.pipeline[1:]
     test_pipeline = Compose(test_pipeline)
     # prepare data
-    data = dict(img=img)
-    data = test_pipeline(data)
-    data = scatter(collate([data], samples_per_gpu=1), [device])[0]
+    datas = []
+    if isinstance(img, (list, tuple)):
+        samples = len(img)
+        for im in img:
+            data = dict(img=im)
+            data = test_pipeline(data)
+            datas.append(data)
+    else:
+        # prepare data
+        samples = 1
+        data = dict(img=img)
+        datas = [test_pipeline(data)]
+    data = scatter(collate(datas, samples_per_gpu=samples), [device])[0]
     # forward the model
     with torch.no_grad():
         result = model(return_loss=False, rescale=True, **data)
