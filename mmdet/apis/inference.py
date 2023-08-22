@@ -77,6 +77,7 @@ def inference_detector(model, img):
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
     # build the data pipeline
+    print(f"[SOLO] what's the test pipeline : {cfg.data.test.pipeline[1:]}")
     test_pipeline = [LoadImage()] + cfg.data.test.pipeline[1:]
     test_pipeline = Compose(test_pipeline)
     # prepare data
@@ -93,6 +94,7 @@ def inference_detector(model, img):
         data = dict(img=img)
         datas = [test_pipeline(data)]
     data = scatter(collate(datas, samples_per_gpu=samples), [device])[0]
+    print(f"[SOLO] the data is like : {data}")
     # forward the model
     with torch.no_grad():
         result = model(return_loss=False, rescale=True, **data)
